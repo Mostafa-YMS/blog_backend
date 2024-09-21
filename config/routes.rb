@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   namespace :auth do
     post "/register", to: "user#create"
+    get "/me", to: "user#me"
+    post "/login", to: "user#login"
   end
 
   # Defines the root path route ("/")
