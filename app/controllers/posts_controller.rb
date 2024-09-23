@@ -10,7 +10,7 @@ class PostsController < ApplicationController
 
   # GET /posts/1
   def show
-    render json: @post.as_json(include: [:author, :tags])
+    render json: @post.as_json(include: [:author, :tags, comments: { include: [:author] }])
   end
 
   # POST /posts
