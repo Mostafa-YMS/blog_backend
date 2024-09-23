@@ -5,13 +5,12 @@ class PostsController < ApplicationController
   # GET /posts
   def index
     @posts = Post.all
-
-    render json: @posts
+    render json: @posts.as_json(include: [:author, :tags])
   end
 
   # GET /posts/1
   def show
-    render json: @post
+    render json: @post.as_json(include: [:author, :tags])
   end
 
   # POST /posts
@@ -21,7 +20,7 @@ class PostsController < ApplicationController
     if @post.save
       @tags = Tag.insert_all(tag_params(@post))
       if !@tags.empty?
-        render json: @post, status: :created, location: @post
+        render json: @post.as_json(include: [:author, :tags]), status: :created, location: @post
       else
         render json: @tags.errors, status: :unprocessable_entity
       end
@@ -44,7 +43,7 @@ class PostsController < ApplicationController
     end
 
     if @post.update(post_params)
-      render json: @post
+      render json: @post.as_json(include: [:author, :tags])
     else
       render json: @post.errors, status: :unprocessable_entity
     end
