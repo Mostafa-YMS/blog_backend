@@ -20,6 +20,7 @@ class PostsController < ApplicationController
     if @post.save
       @tags = Tag.insert_all(tag_params(@post))
       if !@tags.empty?
+        schedule_post_deletion(@post.id)
         render json: @post.as_json(include: [:author, :tags]), status: :created, location: @post
       else
         render json: @tags.errors, status: :unprocessable_entity
@@ -78,5 +79,14 @@ class PostsController < ApplicationController
       tags << { text: tag_name, post_id: post.id }
     end
     return tags
+  end
+
+  def schedule_post_deletion(post_id)
+    target_time = Time.now.utc + 1.days # Set the date to tomorrow
+    manual_time = target_time.strftime("%M %H %d %m")
+
+    Sidekiq::Cron::Job.create(
+      name: "Delete Post #{post_id} - after 24h", cron: "#{manual_time} *", class: DeletePostWorker, args: post_id,
+    )
   end
 end

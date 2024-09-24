@@ -1,5 +1,9 @@
 version: "3"
 services:
+  redis:
+    image: redis:7.2
+    container_name: redis-7.2
+
   db:
     image: postgres:16.4
     container_name: postgres-16.4
@@ -13,6 +17,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
     ports:
       - "5433:5432"
+
   web:
     build: .
     command: "./bin/rails server -b 0.0.0.0"
@@ -24,6 +29,7 @@ services:
       - POSTGRES_PASSWORD=${BLOG_DATABASE_PASSWORD}
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=${REDIS_URL}
       # - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
     volumes:
       - app-storage:/rails/storage
@@ -31,6 +37,21 @@ services:
       - db
     ports:
       - "3000:3000"
+
+  sidekiq:
+    depends_on:
+      - db
+      - redis
+    build: .
+    command: bundle exec sidekiq
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - RAILS_ENV=${RAILS_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${BLOG_DATABASE_PASSWORD}
 
 volumes:
   postgres_data: {}
